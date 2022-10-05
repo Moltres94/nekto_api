@@ -10,6 +10,8 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Locale;
 
+import static core.NektoEnum.Notice.*;
+
 /**
  * simple implementation nektome api
  */
@@ -55,8 +57,11 @@ public class NektoAPI {
                         String notice = body.getString(0);
                         JSONObject bodyData = body.getJSONObject(1);
                         LOG.println("data: "+bodyData.getString(notice));
-                        switch (bodyData.getString(notice)){
-                            case "auth.successToken":
+                        if(bodyData.getString(notice).equals(ERROR)){
+                            LOG.println("message from server[str] %s", text);
+                        }
+                        switch (NektoEnum.Notice.from(bodyData.getString(notice))){
+                            case AUTH_TOKEN:
                                 JSONObject userData = bodyData.getJSONObject("data");
                                 JSONObject tokenInfo = userData.getJSONObject("tokenInfo");
                                 long userid = userData.getLong("id");
@@ -65,16 +70,18 @@ public class NektoAPI {
                                 user.setUserId(userid);
                                 user.setToken(token);
                                 break;
-                            case "online.count":
+                            case ONLINE_COUNT:
                                 JSONObject serdarData = bodyData.getJSONObject("data");
                                 long inChats = serdarData.optLong("inChats",0);
                                 long inSearch = serdarData.optLong("inSearch",0);
                                 long inServer = serdarData.optLong("inServer",0);
                                 LOG.println(String.format(Locale.US, "inChats[%d] inSearch[%d] inServer[%d]", inChats, inSearch, inServer));
                                 break;
-                            case "error.code":
+                            case ERROR:
                                 LOG.println("message from server[str] %s", text);
                                 break;
+                            default:
+                                LOG.println("something went wrong. Incorrect methodName %s", text);
                         }
                     }
                 }catch (Exception exception){

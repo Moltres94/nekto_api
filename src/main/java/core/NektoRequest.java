@@ -4,6 +4,8 @@ import core.utils.LOG;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import static core.NektoEnum.ActionEnum.*;
+
 public abstract class NektoRequest {
 
     public static class SearchRun extends NektoRequest {
@@ -29,7 +31,7 @@ public abstract class NektoRequest {
             requestJson.put("mySex", filter.getMySex());
             requestJson.put("wishAge", wishAgeWrapper);
             requestJson.put("wishSex", filter.getWishSex());
-            requestJson.put("action", "search.run");
+            requestJson.put("action", SEARCH_RUN.getMethodName());
             body.put("action");
             body.put(requestJson);
             return "42"+body;
@@ -40,7 +42,7 @@ public abstract class NektoRequest {
         public String buildRequest(){
             JSONArray body = new JSONArray();
             JSONObject requestJson = new JSONObject();
-            requestJson.put("action", "online.track");
+            requestJson.put("action", ONLINE_TRACK.getMethodName());
             requestJson.put("on", true);
             body.put("action");
             body.put(requestJson);
@@ -62,7 +64,7 @@ public abstract class NektoRequest {
             requestJson.put("token", token);
             requestJson.put("insKey", deivce.getInsKey());
             requestJson.put("vending", deivce.getVending());
-            requestJson.put("action", "auth.sendToken");
+            requestJson.put("action", AUTH_TOKEN.getMethodName());
             requestJson.put("sigKey", deivce.getSigKey());
             requestJson.put("pType", 101);
             requestJson.put("key", deivce.getKey());
@@ -88,7 +90,7 @@ public abstract class NektoRequest {
             requestJson.put("pType", 0);
             requestJson.put("sigKey", deivce.getSigKey());
             requestJson.put("vending", deivce.getVending());
-            requestJson.put("action", "auth.getToken");
+            requestJson.put("action", GET_TOKEN.getMethodName());
             body.put("action");
             body.put(requestJson);
             return "42"+body;
