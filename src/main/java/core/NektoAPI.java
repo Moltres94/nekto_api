@@ -9,14 +9,28 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
+
 
 import static core.NektoEnum.Notice.*;
-
 /**
  * simple implementation nektome api
  */
 public class NektoAPI {
 
+    private class PingTask extends TimerTask {
+        @Override
+        public void run() {
+
+            try {
+                send("2");
+
+            }catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
     /**
      * nekto me base url for webSocket
      */
@@ -50,7 +64,7 @@ public class NektoAPI {
             @Override
             public void onMessage(WebSocket webSocket, String text) {
                 super.onMessage(webSocket, text);
-                //LOG.println("message from server[str] %s", text);
+                LOG.println("message from server[str] %s", text);
                 try {
                     if (text.startsWith("42")) {
                         JSONArray body = new JSONArray(text.substring(2));
@@ -69,6 +83,8 @@ public class NektoAPI {
                                 LOG.println("user id [%d] token[%s]%n", userid, token);
                                 user.setUserId(userid);
                                 user.setToken(token);
+                                Timer timer = new Timer();
+                                timer.schedule(new PingTask(), 20 * 1000, 20 * 1000);
                                 break;
                             case ONLINE_COUNT:
                                 JSONObject serdarData = bodyData.getJSONObject("data");
@@ -78,7 +94,7 @@ public class NektoAPI {
                                 LOG.println(String.format(Locale.US, "inChats[%d] inSearch[%d] inServer[%d]", inChats, inSearch, inServer));
                                 break;
                             case ERROR:
-                                LOG.println("message from server[str] %s", text);
+                                LOG.println("<< To client[str] %s", text);
                                 break;
                             default:
                                 LOG.println("something went wrong. Incorrect methodName %s", text);
@@ -117,10 +133,13 @@ public class NektoAPI {
     }
 
     public void send(String message){
+        LOG.println(">> To server[str] %s", message);
         socket.send(message);
     }
 
     public void send(NektoRequest request){
+
+        LOG.println(">> To server[request] %s", request.buildRequest());
         socket.send(request.buildRequest());
     }
 

@@ -17,9 +17,9 @@ public class Nekto {
         //get server stats
         api.send(new NektoRequest.OnlineTrack());
         //I dont know what is it
-        api.send("2");
+        //api.send("2");
         //start search with current filters
-        api.send(new NektoRequest.SearchRun(new NektoSearchFilter(
+        /*api.send(new NektoRequest.SearchRun(new NektoSearchFilter(
                 false,
                 false,
                 true,
@@ -29,7 +29,7 @@ public class Nekto {
                 22,
                 25,
                 "F"
-        )));
+        )));*/
         //api.close();
         //Call close to exit from application
         //System.close(0);
