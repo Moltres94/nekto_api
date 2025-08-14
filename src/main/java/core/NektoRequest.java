@@ -10,8 +10,12 @@ public abstract class NektoRequest {
 
     public static class SearchRun extends NektoRequest {
         private final NektoSearchFilter filter;
+        private static NektoSearchFilter lastFilter;
         public SearchRun(NektoSearchFilter filter){
-            this.filter = filter;
+            this.filter = filter; lastFilter=filter;
+        }
+        public SearchRun(){
+            this(lastFilter);
         }
         public String buildRequest(){
             JSONArray myAge = new JSONArray();
@@ -39,11 +43,15 @@ public abstract class NektoRequest {
     }
 
     public static class OnlineTrack extends NektoRequest {
+        private final boolean state;
+        public OnlineTrack(boolean state){
+            this.state = state;
+        }
         public String buildRequest(){
             JSONArray body = new JSONArray();
             JSONObject requestJson = new JSONObject();
             requestJson.put("action", ONLINE_TRACK.getMethodName());
-            requestJson.put("on", true);
+            requestJson.put("on", state);
             body.put("action");
             body.put(requestJson);
             return "42"+body;
@@ -91,6 +99,35 @@ public abstract class NektoRequest {
             requestJson.put("sigKey", deivce.getSigKey());
             requestJson.put("vending", deivce.getVending());
             requestJson.put("action", GET_TOKEN.getMethodName());
+            body.put("action");
+            body.put(requestJson);
+            return "42"+body;
+        }
+    }
+
+    public static class SendCaptcha extends NektoRequest{
+        private String solutionStr;
+        public SendCaptcha(String solutionStr){
+            this.solutionStr = solutionStr;
+        }
+        public String buildRequest(){
+            JSONArray body = new JSONArray();
+            JSONObject requestJson = new JSONObject();
+            //requestJson.put("hard", false);
+            requestJson.put("solution", solutionStr);
+            requestJson.put("action", CAPTCHA_VERIFY.getMethodName());
+            body.put("action");
+            body.put(requestJson);
+            return "42"+body;
+        }
+    }
+    public static class SearchStop extends NektoRequest{
+
+        public SearchStop(){}
+        public String buildRequest(){
+            JSONArray body = new JSONArray();
+            JSONObject requestJson = new JSONObject();
+            requestJson.put("action", SEARCH_OUT.getMethodName());
             body.put("action");
             body.put(requestJson);
             return "42"+body;

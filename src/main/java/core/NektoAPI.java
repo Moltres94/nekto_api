@@ -7,6 +7,8 @@ import okio.ByteString;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+
+import javax.swing.*;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Timer;
@@ -18,7 +20,13 @@ import static core.NektoEnum.Notice.*;
  * simple implementation nektome api
  */
 public class NektoAPI {
-
+    private NektoAPI api;
+    private NektoGui ng;
+    public NektoAPI(NektoGui ng)
+    {
+        this.ng=ng;
+        this.api=this;
+    }
     private class PingTask extends TimerTask {
         @Override
         public void run() {
@@ -58,21 +66,22 @@ public class NektoAPI {
             @Override
             public void onOpen(WebSocket webSocket, Response response) {
                 super.onOpen(webSocket, response);
+                ng.setStatus(1);
                 LOG.println("opened connection");
             }
 
             @Override
             public void onMessage(WebSocket webSocket, String text) {
                 super.onMessage(webSocket, text);
-                LOG.println("message from server[str] %s", text);
+                LOG.println("<< From server[str] %s", text);
                 try {
                     if (text.startsWith("42")) {
                         JSONArray body = new JSONArray(text.substring(2));
                         String notice = body.getString(0);
                         JSONObject bodyData = body.getJSONObject(1);
-                        LOG.println("data: "+bodyData.getString(notice));
+                        //LOG.println("data: "+bodyData.getString(notice));
                         if(bodyData.getString(notice).equals(ERROR)){
-                            LOG.println("message from server[str] %s", text);
+                            //LOG.println("message from server[str] %s", text);
                         }
                         switch (NektoEnum.Notice.from(bodyData.getString(notice))){
                             case AUTH_TOKEN:
@@ -80,7 +89,8 @@ public class NektoAPI {
                                 JSONObject tokenInfo = userData.getJSONObject("tokenInfo");
                                 long userid = userData.getLong("id");
                                 String token = tokenInfo.getString("authToken");
-                                LOG.println("user id [%d] token[%s]%n", userid, token);
+                                //LOG.println("user id [%d] token[%s]%n", userid, token);
+                                ng.setUserID("UserID: "+userid);
                                 user.setUserId(userid);
                                 user.setToken(token);
                                 Timer timer = new Timer();
@@ -91,10 +101,32 @@ public class NektoAPI {
                                 long inChats = serdarData.optLong("inChats",0);
                                 long inSearch = serdarData.optLong("inSearch",0);
                                 long inServer = serdarData.optLong("inServer",0);
-                                LOG.println(String.format(Locale.US, "inChats[%d] inSearch[%d] inServer[%d]", inChats, inSearch, inServer));
+                                //LOG.println(String.format(Locale.US, "inChats[%d] inSearch[%d] inServer[%d]", inChats, inSearch, inServer));
+                                ng.setUserCount(String.format(Locale.US, "inChats: %d inSearch: %d inServer: %d", inChats, inSearch, inServer));
+                                break;
+                            case SEARCH_SUCCESS:
+                                ng.setStatus(3);
+                                LOG.println("Search in progress");
+                                break;
+                            case SEARCH_OUT:
+                                ng.setStatus(1);
+                                break;
+                            case CAPTCHA_VERIFY:
+                                JSONObject captchaData = bodyData.getJSONObject("data");
+                                //boolean solution = captchaData.getBoolean("solution");
+                                //if (solution){
+                                    api.send(new NektoRequest.SearchRun());
+                                //}
                                 break;
                             case ERROR:
-                                LOG.println("<< To client[str] %s", text);
+                                JSONObject errorData = bodyData.getJSONObject("data");
+                                long errorCode = errorData.optLong("id",0);
+                                if (errorCode==600){
+                                    ng.setStatus(2);
+                                    JSONObject additional = errorData.getJSONObject("additional");
+                                    String imageUrl = additional.getString("captchaImage");
+                                    SwingUtilities.invokeLater(() -> new NektoCaptchaFrame(imageUrl,api));
+                                }
                                 break;
                             default:
                                 LOG.println("something went wrong. Incorrect methodName %s", text);

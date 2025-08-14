@@ -1,9 +1,16 @@
 import core.*;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 public class Nekto {
 
     public static void main(String[] args) {
-        NektoAPI api = new NektoAPI();
+        NektoGui ng = new NektoGui();
+        NektoAPI api = new NektoAPI(ng);
+        ng.setApi(api);
         //Contain token and id. Could be use for save and reuse
         NektoUser user = new NektoUser();
         //Just device static info
@@ -15,21 +22,11 @@ public class Nekto {
         else
             api.send(new NektoRequest.GetToken(deivce));
         //get server stats
-        api.send(new NektoRequest.OnlineTrack());
+        api.send(new NektoRequest.OnlineTrack(true));
         //I dont know what is it
         //api.send("2");
         //start search with current filters
-        /*api.send(new NektoRequest.SearchRun(new NektoSearchFilter(
-                false,
-                false,
-                true,
-                22,
-                25,
-                "M",
-                22,
-                25,
-                "F"
-        )));*/
+
         //api.close();
         //Call close to exit from application
         //System.close(0);
