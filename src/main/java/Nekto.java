@@ -1,10 +1,5 @@
 import core.*;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 public class Nekto {
 
     public static void main(String[] args) {
@@ -23,9 +18,6 @@ public class Nekto {
             api.send(new NektoRequest.GetToken(deivce));
         //get server stats
         api.send(new NektoRequest.OnlineTrack(true));
-        //I dont know what is it
-        //api.send("2");
-        //start search with current filters
 
         //api.close();
         //Call close to exit from application

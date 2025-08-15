@@ -22,6 +22,9 @@ import static core.NektoEnum.Notice.*;
 public class NektoAPI {
     private NektoAPI api;
     private NektoGui ng;
+    private NektoUser user;
+    private Timer responseTimer;
+    private long lastReadMessageId=0;
     public NektoAPI(NektoGui ng)
     {
         this.ng=ng;
@@ -33,7 +36,23 @@ public class NektoAPI {
 
             try {
                 send("2");
+            }
 
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    private class ReadTask extends TimerTask {
+        @Override
+        public void run() {
+
+            try {
+                if (lastReadMessageId>0) {
+                    api.send(new NektoRequest.SendResponse(user.getDialogId(), lastReadMessageId));
+                    lastReadMessageId=0;
+                }
+                else LOG.println("No Messages");
             }catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -55,6 +74,7 @@ public class NektoAPI {
      * @param
      */
     public void connect(NektoUser user){
+        this.user=user;
         HashMap<String, String>  headers = new HashMap<>();
         headers.put("User-Agent", "NektoMe193/1.6.0 (Linux; U; Android 4.4.2; SM-G355H Build/KOT49H)");
         headers.put("Android-Language", "ru");
@@ -95,6 +115,46 @@ public class NektoAPI {
                                 user.setToken(token);
                                 Timer timer = new Timer();
                                 timer.schedule(new PingTask(), 20 * 1000, 20 * 1000);
+                                break;
+                            case DIALOG_OPENED:
+                                ng.addText("-- Chat opened --");
+                                responseTimer = new Timer();
+                                responseTimer.schedule(new ReadTask(), 5 * 1000, 5 * 1000);
+                                JSONObject dialogData = bodyData.getJSONObject("data");
+                                long chatid = dialogData.getLong("id");
+                                JSONArray interlocutor = dialogData.getJSONArray("interlocutors");
+                                long interlocutorID=interlocutor.getLong(1);
+                                ng.setStatus(4);
+                                ng.setInterlocutor(interlocutorID);
+                                user.setOpponentId(interlocutorID);
+                                ng.setDialogId(chatid);
+                                user.setDialogId(chatid);
+                                break;
+                            case DIALOG_CLOSED:
+                                ng.addText("-- Chat closed --");
+                                responseTimer.cancel();
+                                ng.setStatus(1);
+                                ng.hideInterlocutor();
+                                user.setDialogId(0);
+                                user.setOpponentId(0);
+                                ng.setDialogId(0);
+                                api.send(new NektoRequest.OnlineTrack(true));
+                                break;
+                            case DIALOG_TYPING:
+                                JSONObject typingData = bodyData.getJSONObject("data");
+                                boolean isTyping=typingData.getBoolean("typing");
+                                if (isTyping)
+                                    ng.setUserCount("Typing...");
+                                else
+                                    ng.setUserCount("");
+                                break;
+                            case NEW_MESSAGE:
+                                JSONObject messageData = bodyData.getJSONObject("data");
+                                String messageText=messageData.getString("message");
+                                long senderID=messageData.getLong("senderId");
+                                if (senderID==user.getOpponentId()) {lastReadMessageId=messageData.getLong("id");
+                                ng.addText("Nekto: "+messageText);}
+                                else  ng.addText("I: "+messageText);
                                 break;
                             case ONLINE_COUNT:
                                 JSONObject serdarData = bodyData.getJSONObject("data");

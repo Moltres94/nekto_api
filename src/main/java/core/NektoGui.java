@@ -11,12 +11,15 @@ import java.net.URL;
 
 public class NektoGui extends JFrame implements ActionListener {
     private NektoAPI api;
+    private boolean inChat = false;
+    private long dialogId = 0;
+    private int state=0;
     private JTextArea jta = new JTextArea(
-            "Scroll bar will appear, when much text");
-    private JLabel statuslabel =new JLabel("Status: ");
-    private JLabel userIDLabel =new JLabel("UserID: ");
-    private JLabel userCountLabel =new JLabel("InChat: ");
-    private JLabel errorLabel =new JLabel("");
+            "");
+    private JLabel statuslabel = new JLabel("Status: ");
+    private JLabel userIDLabel = new JLabel("UserID: ");
+    private JLabel userCountLabel = new JLabel("InChat: ");
+    private JLabel errorLabel = new JLabel("");
     private JButton searchButton = new JButton("Start search");
 
     public NektoGui() {
@@ -31,19 +34,29 @@ public class NektoGui extends JFrame implements ActionListener {
         jpTop.add(errorLabel);
 
 
-        c.add(jpTop,BorderLayout.NORTH);
+        c.add(jpTop, BorderLayout.NORTH);
 
-        JPanel jp = new JPanel();
+        JPanel jpBottom = new JPanel();
+        //jpBottom.setLayout(new GridLayout(1, 2));
+        JTextField messageField = new JTextField(15);
+        messageField.addActionListener(e -> {
+            if (state==4)
+                api.send(new NektoRequest.SendMessage(messageField.getText(),dialogId));
+            messageField.setText("");
+        });
+        jpBottom.add(messageField);
+        //JButton jbt = new JButton("Send");
+        //jbt.addActionListener(this); // назначаем обработчик события
+        //jpBottom.add(jbt);
+
         searchButton.addActionListener(this); // назначаем обработчик события
-        jp.add(searchButton);
+        jpBottom.add(searchButton);
         searchButton.setEnabled(false);
-        JButton jbt = new JButton("Clear text");
-        jbt.addActionListener(this); // назначаем обработчик события
-        jp.add(jbt);
-        jbt = new JButton("Send");
-        jbt.addActionListener(this); // назначаем обработчик события
-        jp.add(jbt);
-        c.add(jp, BorderLayout.SOUTH);
+
+        //jbt = new JButton("Clear text");
+        //jbt.addActionListener(this); // назначаем обработчик события
+        //jpBottom.add(jbt);
+        c.add(jpBottom, BorderLayout.SOUTH);
         c.add(new JScrollPane(jta));
         jta.setLineWrap(true);
         // -------------------------------------------
@@ -56,25 +69,27 @@ public class NektoGui extends JFrame implements ActionListener {
         pack(); // устанавливаем желательные размеры
         setVisible(true); // отображаем окно
     }
-    public void setApi(NektoAPI api)
-    {
-        this.api=api;
+
+    public void setApi(NektoAPI api) {
+        this.api = api;
     }
-    public void addText(String str)
-    {
-        jta.append(str+"\\n");
+
+    public void addText(String str) {
+        jta.append(str + System.lineSeparator());
     }
-    public void setText(String str)
-    {
-        jta.setText(str+"\\n");
+
+    public void setText(String str) {
+        jta.setText(str + "\\n");
     }
-    public void setStatus(int state)
-    {
-        switch (state){
+
+    public void setStatus(int state) {
+        this.state=state;
+        switch (state) {
             case 1:
                 statuslabel.setText("Status: Connected");
                 searchButton.setText("Start search");
                 searchButton.setEnabled(true);
+                inChat = false;
                 break;
 
             case 2:
@@ -87,19 +102,33 @@ public class NektoGui extends JFrame implements ActionListener {
                 break;
             case 4:
                 statuslabel.setText("Status: inChat");
+                searchButton.setText("Exit chat");
+                userCountLabel.setText("");
+                inChat = true;
                 break;
             default:
                 statuslabel.setText("Status: Unknown");
         }
 
     }
-    public void setUserID(String str)
-    {
+
+    public void setUserID(String str) {
         userIDLabel.setText(str);
     }
-    public void setUserCount(String str)
-    {
+
+    public void setInterlocutor(long id) {
+        errorLabel.setText("Opponent: "+id);
+    }
+    public void hideInterlocutor() {
+        errorLabel.setText("");
+    }
+
+    public void setUserCount(String str) {
         userCountLabel.setText(str);
+    }
+
+    public void setDialogId(long id){
+        this.dialogId=id;
     }
     // обработчик события, метод интерфейса ActionListener
     public void actionPerformed(ActionEvent arg0) {
@@ -125,6 +154,11 @@ public class NektoGui extends JFrame implements ActionListener {
         if (arg0.getActionCommand().equals("Cancel search")) {
             api.send(new NektoRequest.SearchStop());
             api.send(new NektoRequest.OnlineTrack(true));
+            searchButton.setEnabled(false);
+        }
+        if (arg0.getActionCommand().equals("Exit chat")) {
+            api.send(new NektoRequest.ExitChat(dialogId));
+
             searchButton.setEnabled(false);
         }
 

@@ -121,9 +121,83 @@ public abstract class NektoRequest {
             return "42"+body;
         }
     }
+    public static class SendResponse extends NektoRequest{
+        private long dialogId;
+        private long lastMessageId;
+        public SendResponse(long dialogId,long lastMessageId){
+            this.dialogId = dialogId;this.lastMessageId = lastMessageId;
+        }
+        public String buildRequest(){
+            JSONArray body = new JSONArray();
+            JSONObject requestJson = new JSONObject();
+            //requestJson.put("hard", false);
+            requestJson.put("dialogId", dialogId);
+            requestJson.put("lastMessageId", lastMessageId);
+            requestJson.put("action", ANON_READ_MESSAGES.getMethodName());
+            body.put("action");
+            body.put(requestJson);
+            return "42"+body;
+        }
+    }
+    public static class SendMessage extends NektoRequest{
+        private String msg;
+        private long dialogId;
+        public SendMessage(String msg, long dialogId){
+            this.msg = msg;
+            this.dialogId=dialogId;
+        }
+        private String getRandom()
+        {
+            long max = 9223372036854775807L;
+            long min = 1L;
+            long var3 = (long)(Math.random() * (max - min) + min);
+            return (String.valueOf(var3));
+        }
+        public String buildRequest(){
+            JSONArray body = new JSONArray();
+            JSONObject requestJson = new JSONObject();
+            //requestJson.put("hard", false);
+            requestJson.put("dialogId", dialogId);
+            requestJson.put("message", msg);
+            requestJson.put("randomId", getRandom());
+            requestJson.put("action", ANON_MESSAGE.getMethodName());
+            requestJson.put("fileId", JSONObject.NULL);
+            body.put("action");
+            body.put(requestJson);
+            return "42"+body;
+        }
+    }
+    public static class ExitChat extends NektoRequest{
+        private Long dialogID;
+        public ExitChat(Long dialogID){
+            this.dialogID = dialogID;
+        }
+        public String buildRequest(){
+            JSONArray body = new JSONArray();
+            JSONObject requestJson = new JSONObject();
+            //requestJson.put("hard", false);
+            requestJson.put("action", ANON_LEAVE.getMethodName());
+            requestJson.put("dialogId", dialogID);
+            body.put("action");
+            body.put(requestJson);
+            return "42"+body;
+        }
+    }
     public static class SearchStop extends NektoRequest{
 
         public SearchStop(){}
+        public String buildRequest(){
+            JSONArray body = new JSONArray();
+            JSONObject requestJson = new JSONObject();
+            requestJson.put("action", SEARCH_OUT.getMethodName());
+            body.put("action");
+            body.put(requestJson);
+            return "42"+body;
+        }
+    }
+    public static class ReadMessages extends NektoRequest{
+
+        public ReadMessages(){}
         public String buildRequest(){
             JSONArray body = new JSONArray();
             JSONObject requestJson = new JSONObject();
